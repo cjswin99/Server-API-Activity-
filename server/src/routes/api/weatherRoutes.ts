@@ -8,6 +8,7 @@ const router = Router();
 router.post('/', (req: Request, res: Response) => {
   // TODO: GET weather data from city name
   // TODO: save city to search history
+  let city = req.body.city 
 });
 
 // TODO: GET search history
