@@ -1,14 +1,56 @@
 import { Router, type Request, type Response } from 'express';
 const router = Router();
+import dotenv from 'dotenv';
+dotenv.config();
+import fs from 'fs';
 
-// import HistoryService from '../../service/historyService.js';
-// import WeatherService from '../../service/weatherService.js';
+interface modifiedWeatherData {
+  city: string;
+  date: string; 
+  icon: string; 
+  iconDescription: string; 
+  tempF: number; 
+  windSpeed: number;
+  humidity: number;
+}
 
 // TODO: POST Request with city name to retrieve weather data
-router.post('/', (req: Request, res: Response) => {
+router.post('/', async (req: Request, res: Response) => {
+  console.log(req.body)
   // TODO: GET weather data from city name
   // TODO: save city to search history
-  let city = req.body.city 
+  let city = req.body.cityName
+  let cityLocation = await fetch(`http://api.openweathermap.org/geo/1.0/direct?q=${city}&limit=1&appid=${process.env.API_KEY}`)
+  let cityLocationData = await cityLocation.json()
+  let weather = await fetch(`https://api.openweathermap.org/data/2.5/forecast?lat=${cityLocationData[0].lat}&lon=${cityLocationData[0].lon}&units=imperial&appid=${process.env.API_KEY}`)
+  let weatherData = await weather.json()
+  //const fs = require('fs'); //Ask about this
+  fs.readFile("../../../db/db.json", "utf8", (err: any, data: any) => {
+    if (err) {
+      console.error(err);
+      return;
+    }
+    let parseData = JSON.parse(data)
+    parseData.push(city)
+
+    fs.writeFile("../../../db/db.json", JSON.stringify(parseData), (err: any) => {
+      if (err) {
+        console.error(err);
+        return;} 
+      })
+  });
+  const weatherArray: modifiedWeatherData[] = weatherData.list.map((element: any) => {
+    return {
+      city: city,
+      date: element.dt_txt,
+      icon: element.weather[0].icon,
+      iconDescription: element.weather[0].description,
+      tempF: element.main.temp,
+      windSpeed: element.wind.speed,
+      humidity: element.main.humidity, 
+    }
+  })
+  res.json(weatherArray)
 });
 
 // TODO: GET search history
