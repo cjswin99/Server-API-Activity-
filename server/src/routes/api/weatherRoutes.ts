@@ -25,15 +25,15 @@ router.post('/', async (req: Request, res: Response) => {
   let weather = await fetch(`https://api.openweathermap.org/data/2.5/forecast?lat=${cityLocationData[0].lat}&lon=${cityLocationData[0].lon}&units=imperial&appid=${process.env.API_KEY}`)
   let weatherData = await weather.json()
   //const fs = require('fs'); //Ask about this
-  fs.readFile("../../../db/db.json", "utf8", (err: any, data: any) => {
+  fs.readFile("./db/db.json", "utf8", (err: any, data: any) => {
     if (err) {
       console.error(err);
       return;
     }
     let parseData = JSON.parse(data)
-    parseData.push(city)
+    parseData.push({name:city})
 
-    fs.writeFile("../../../db/db.json", JSON.stringify(parseData), (err: any) => {
+    fs.writeFile("./db/db.json", JSON.stringify(parseData), (err: any) => {
       if (err) {
         console.error(err);
         return;} 
@@ -54,7 +54,17 @@ router.post('/', async (req: Request, res: Response) => {
 });
 
 // TODO: GET search history
-router.get('/history', async (req: Request, res: Response) => {});
+router.get('/history', async (req: Request, res: Response) => {
+  fs.readFile("./db/db.json", "utf8", (err: any, data: any) => {
+    if (err) {
+      console.error(err);
+      res.status(500).json(err)
+    } else {
+      res.json(JSON.parse(data))
+    }
+    
+  });
+});
 
 // * BONUS TODO: DELETE city from search history
 router.delete('/history/:id', async (req: Request, res: Response) => {});
